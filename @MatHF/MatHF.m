@@ -9,7 +9,7 @@ classdef MatHF < handle
         
         % constructor
         function res = MatHF(geomstr, basisname)
-            res.matpsi = MatPsi(geomstr, basisname);
+            res.matpsi = MatPsi({geomstr, basisname});
             nbasis = res.matpsi.nbasis();
             res.BasisProp.nbasis = res.matpsi.nbasis();
             res.Int.S = res.matpsi.overlap();
