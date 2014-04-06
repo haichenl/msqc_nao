@@ -39,18 +39,21 @@ classdef MatHF < handle
             obj.incorejk = InCoreJK(obj.matpsi);
         end
         
-        function doHF(obj)
-            filled = 1:(obj.Molprop.Nelec/2);
+        function [orb,Eorb,Ehf,Eelec] = hf(obj)
+
+            Enuc = obj.MolProp.Enuc;
+            Nelec = obj.Molprop.nelec;
             
             % Step 3 -- Calculate transformation matrix (eq. 3.167).
-            X = inv(sqrtm(obj.OEI.S));
+            X = inv(sqrtm(S));
             
             % Step 4 -- Guess at density matrix -- all zeros right now.
-            if ( isempty(obj.HFresults.density) )
-                Pn = zeros(obj.BasisProp.nbasis);
+            if ( isempty(obj.HFresults.densitya) )
+                Pn = obj.frag.density;
             else
-                Pn = obj.HFresults.density;
+                Pn = obj.densitySave;
             end
+            % Pn = zeros(obj.nbasis); % for speed test
             
             iter = 0;
             finished = false;
@@ -61,58 +64,102 @@ classdef MatHF < handle
                 
                 P = Pn;
                 
-                % Step 6 -- Obtain F (fock matrix). In-core right now
-                F = H1 + obj.incorejk.ComputeJ(P) + obj.incorejk.ComputeK(P);
+                % Step 5 -- Build 2-electron components of Fock matrix.
+                G = reshape(H2jk*reshape(P,obj.nbasis.^2,1),obj.nbasis,obj.nbasis);
+                
+                % Step 6 -- Obtain F (fock matrix).
+                F = H1 + G;
                 
                 % Step 7 -- Calculate the transformed F matrix.
                 Ft = X'*F*X;
                 
                 % Step 8 -- Find e and the transformed expansion coefficient matrices.
-                [Ct1, e1] = eig(Ft);
+                [Ct1,e1] = eig(Ft);
                 e2 = diag(e1);
                 [e, i1] = sort(e2);
-                Ct = Ct1(:, i1);
+                Ct = Ct1(:,i1);
                 
                 % Step 9 -- Transform Ct back to C.
                 C = X*Ct;
                 
                 % Step 10 -- Calculate the new density matrix.
-                
+                filled = 1:(Nelec/2);
                 Pn = 2* C(:,filled)*( C(:,filled)');
                 iter = iter + 1;
                 
                 changeInDensity = max(max(abs(P - Pn)));
-                Ehftemp = sum(sum(Pn.*(H1+F)));
+                Ehftemp = sum(sum(P.*(H1+F)));
                 changeInEnergy = abs(Ehftemp - Ehfsave);
-                if (iter > obj.HFpars.maxIter)
+                if (iter > maxIter)
                     finished = true;
-                elseif (iter > obj.HFpars.minIter)
-                    if (changeInDensity < obj.HFpars.eps...
-                            || changeInEnergy < obj.HFpars.eps)
+                elseif (iter > minIter)
+                    if (changeInDensity < eps || changeInEnergy < eps)
                         finished = true;
                     end
                 end
                 Ehfsave = Ehftemp;
             end
             % End of iteration of steps 5-11.
-            obj.HFresults.density = Pn;
+            
+            P = Pn;  % For convenience.
+            obj.densitySave = P;
             
             % Step 12: Output.
-            obj.HFresults.Ehf = Ehfsave/2 + obj.MolProp.Enuc;
+            obj.g = G;
+            %Total energy
+            %3.184: E0 = 1/2 Sum(i,j) {P(j,i)[H1(i,j) + F(i,j)]}
+            Ee = sum(sum(P.*(H1+F)));
+            Ehf = Ee/2 + Enuc;
+            
+            % electronic energy
+            Eelec = Ee/2;
             
             % Orbital energies.
-            obj.HFresults.Eorb = e;
+            Eorb = e;
             
             % Molecular orbital components.
-            obj.HFresults.orb = C;
+            orb = C;
             
+            % density and transformed density
+            obj.dens = P;
+            obj.denst = invx'*P*invx;
             
+            % obj.transmatmo = C(:,filled);
+            % obj.h1transmo = obj.transmatmo'*H1*obj.transmatmo;
             
-            if (iter+1 > obj.HFpars.maxIter)
+            % transmat = C(:,filled);
+            
+            % disp(iter);
+            
+            if (iter+1 > maxIter)
                 disp('You are living on the edge.. hartree fock didn''t converge');
             end
             
         end
+        %{
+Adapted from "Modern quantum chemistry", by Attila Szab? Neil S. Ostlund
+Numbered equations also adapted from here.
+1. Specify a molecule
+2. Calculate S(i,j), H^core (H1), and (i j|k l)(H2)
+    -These first two steps are done by Gaussian
+3. Diagonalize overlap matrix S and obtain X from 3.167
+    3.167: X = S^(-1/2)
+4. Guess the density matrix P (first guess is zeros here)
+5. Calculate matrix G of 3.154 from P and H2
+    G(i,j) = Sum(k, l){P(k,l)[(i j|l k)-1/2(i k|l j)]}
+6. Add G to core-Hamiltonian  to get Fock matrix
+    3.154: F(i,j) = H1(i,j) + G(i,j)
+7. Calculate transformed Fock matrix F' = X'(t)FX
+8. Diagonalize F' to obtain C' and epsilon
+9. Calculate C = XC'
+10. Form new density matrix P from C w/ 3.145
+    3.145: P(i,j) = 2 Sum(1-Nelec/2){C(i,a) C*(j,a)}
+11. Has P converged to within eps?
+    No? -> Step 5 w/ new P from 10.
+    Yes? -> Step 12
+12. Use resultant solution, represented by C,P,F to calculate outputs
+        %}
+
         
     end
         
