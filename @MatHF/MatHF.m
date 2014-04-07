@@ -91,7 +91,7 @@ classdef MatHF < handle
                 P = Pn;
                 
                 % Step 6 -- Obtain F (fock matrix). In-core right now
-                F = obj.H1 + obj.fastjk.ComputeJ(P) + obj.fastjk.ComputeK(P);
+                F = obj.H1 + obj.fastjk.Jmat(P) + obj.fastjk.Kmat(P);
                 
                 % Step 7 -- Calculate the transformed F matrix.
                 Ft = X'*F*X;
