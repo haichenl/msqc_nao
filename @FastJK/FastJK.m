@@ -56,7 +56,7 @@ classdef FastJK < handle
             densVec(diagind) = 0.5 * densVec(diagind);
             
             % form the uniq J vector 
-            juniqvec = res.teiMatJ * densVec;
+            juniqvec = obj.teiMatJ * densVec;
             
             % form the full J matrix, i.e. Hermitianize 
             jmat = zeros(obj.nbasis);
@@ -73,7 +73,7 @@ classdef FastJK < handle
             diagind = diagind .* ( diagind + 1 ) / 2;
             densVec(diagind) = 0.5 * densVec(diagind);
             
-            kuniqvec = res.teiMatK * densVec;
+            kuniqvec = obj.teiMatK * densVec;
             
             kmat = zeros(obj.nbasis);
             kmat(triu(true(obj.nbasis))) = kuniqvec;
