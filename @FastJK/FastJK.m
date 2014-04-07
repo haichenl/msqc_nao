@@ -19,7 +19,7 @@ classdef FastJK < handle
     
     methods
         
-        function res = InCoreJK(matpsi)
+        function res = FastJK(matpsi)
             
             [teiVecJ, teiVecK] = matpsi.tei_alluniqJK();
             res.nbasis = matpsi.nbasis();
