@@ -3,13 +3,31 @@ classdef MatHF < handle
     properties
         matpsi;
         incorejk;
+        fastjk;
         
-        MolProp;
-        BasisProp;
-        OEI; % one-electron integrals 
-        HFpars;
+        % Molecule properties 
+        Enuc;
+        natom;
+        nelec;
         
-        HFresults;
+        % Basis set properties 
+        nbasis;
+        basisAtom;
+        
+        % one-electron integrals 
+        S;
+        H1
+        
+        % Hartree-Fock settings 
+        eps;
+        maxIter;
+        minIter;
+        
+        % Hartree-Fock results
+        density;
+        Ehf;
+        Eorb;
+        orb;
         
     end
     
@@ -19,24 +37,24 @@ classdef MatHF < handle
         function res = MatHF(geomstr, basisname)
             res.matpsi = MatPsi({geomstr, basisname});
             
-            res.MolProp.Enuc = res.matpsi.Enuc();
-            res.MolProp.natom = res.matpsi.natom();
-            res.MolProp.nelec = res.matpsi.nelec();
+            res.Enuc = res.matpsi.Enuc();
+            res.natom = res.matpsi.natom();
+            res.nelec = res.matpsi.nelec();
             
-            res.BasisProp.nbasis = res.matpsi.nbasis();
-            res.BasisProp.basisAtom = res.matpsi.func2center();
+            res.nbasis = res.matpsi.nbasis();
+            res.basisAtom = res.matpsi.func2center();
             
-            res.OEI.S = res.matpsi.overlap();
-            res.OEI.H1 = res.matpsi.kinetic() + res.matpsi.potential();
+            res.S = res.matpsi.overlap();
+            res.H1 = res.matpsi.kinetic() + res.matpsi.potential();
             
-            res.HFpars.eps = 1.0e-8;
-            res.HFpars.maxIter = 100;
-            res.HFpars.minIter = 5;
+            res.eps = 1.0e-8;
+            res.maxIter = 100;
+            res.minIter = 5;
             
-            res.HFresults.density = [];
-            res.HFresults.Ehf = [];
-            res.HFresults.Eorb = [];
-            res.HFresults.orb = [];
+            res.density = [];
+            res.Ehf = [];
+            res.Eorb = [];
+            res.orb = [];
         end
         
         % incorejk object initializer 
@@ -44,17 +62,23 @@ classdef MatHF < handle
             obj.incorejk = InCoreJK(obj.matpsi);
         end
         
+        function UseFastJK(obj)
+            obj.fastjk = FastJK(obj.matpsi);
+        end
+        
         function doHF(obj)
-            filled = 1:(obj.MolProp.nelec/2);
-            H1 = obj.OEI.H1;
+            
+            obj.UseFastJK();
+            
+            filled = 1:(obj.nelec/2);
             % Step 3 -- Calculate transformation matrix (eq. 3.167).
-            X = inv(sqrtm(obj.OEI.S));
+            X = inv(sqrtm(obj.S));
             
             % Step 4 -- Guess at density matrix -- all zeros right now.
-            if ( isempty(obj.HFresults.density) )
-                Pn = zeros(obj.BasisProp.nbasis);
+            if ( isempty(obj.density) )
+                Pn = zeros(obj.nbasis);
             else
-                Pn = obj.HFresults.density;
+                Pn = obj.density;
             end
             
             iter = 0;
@@ -67,7 +91,7 @@ classdef MatHF < handle
                 P = Pn;
                 
                 % Step 6 -- Obtain F (fock matrix). In-core right now
-                F = H1 + obj.incorejk.ComputeJ(P) + obj.incorejk.ComputeK(P);
+                F = obj.H1 + obj.fastjk.ComputeJ(P) + obj.fastjk.ComputeK(P);
                 
                 % Step 7 -- Calculate the transformed F matrix.
                 Ft = X'*F*X;
@@ -87,33 +111,33 @@ classdef MatHF < handle
                 iter = iter + 1;
                 
                 changeInDensity = max(max(abs(P - Pn)));
-                Ehftemp = sum(sum(Pn.*(H1+F)));
+                Ehftemp = sum(sum(Pn.*(obj.H1+F)));
                 changeInEnergy = abs(Ehftemp - Ehfsave);
-                if (iter > obj.HFpars.maxIter)
+                if (iter > obj.maxIter)
                     finished = true;
-                elseif (iter > obj.HFpars.minIter)
-                    if (changeInDensity < obj.HFpars.eps...
-                            || changeInEnergy < obj.HFpars.eps)
+                elseif (iter > obj.minIter)
+                    if (changeInDensity < obj.eps...
+                            || changeInEnergy < obj.eps)
                         finished = true;
                     end
                 end
                 Ehfsave = Ehftemp;
             end
             % End of iteration of steps 5-11.
-            obj.HFresults.density = Pn;
+            obj.density = Pn;
             
             % Step 12: Output.
-            obj.HFresults.Ehf = Ehfsave/2 + obj.MolProp.Enuc;
+            obj.Ehf = Ehfsave/2 + obj.Enuc;
             
             % Orbital energies.
-            obj.HFresults.Eorb = e;
+            obj.Eorb = e;
             
             % Molecular orbital components.
-            obj.HFresults.orb = C;
+            obj.orb = C;
             
             
             
-            if (iter+1 > obj.HFpars.maxIter)
+            if (iter+1 > obj.maxIter)
                 disp('You are living on the edge.. hartree fock didn''t converge');
             end
             

@@ -2,9 +2,7 @@ classdef InCoreJK < handle
     
     properties
         
-        % 2*uniqN length vector, the first uniqN length holding a "normal"
-        % two-electron integral unique vector, the last uniqN length
-        % holding an arranged one for the forming of K 
+        % 2 uniqN length vectors 
         teiVecJ; % occupy ~ n^4 / 4 * 8 bytes of memory. nbasis = 375 => 40 gb
         teiVecK; % occupy ~ n^4 / 4 * 8 bytes of memory. nbasis = 375 => 40 gb
         
@@ -33,7 +31,7 @@ classdef InCoreJK < handle
 
         end
         
-        function jmat = ComputeJ(obj, densMat)
+        function jmat = Jmat(obj, densMat)
             % in-core algorithm
             
             % scale density vector 
@@ -47,7 +45,7 @@ classdef InCoreJK < handle
             
             % extract every row and multiply it with the scaled density vector 
             for i = 1 : obj.bigN
-                juniqvec(i) = obj.JRow( i ) * densVec;
+                juniqvec(i) = obj.Jrow( i ) * densVec;
             end
             
             % forming the full J matrix 
@@ -57,7 +55,7 @@ classdef InCoreJK < handle
             
         end
         
-        function kmat = ComputeK(obj, densMat)
+        function kmat = Kmat(obj, densMat)
             % in-core algorithm
             
             densVec = -0.5 * densMat(triu(true(obj.nbasis)));
@@ -66,7 +64,7 @@ classdef InCoreJK < handle
             end
             kuniqvec = zeros(1, obj.bigN);
             for i = 1 : obj.bigN
-                kuniqvec(i) = obj.KRow( i ) * densVec;
+                kuniqvec(i) = obj.Krow( i ) * densVec;
             end
             kmat = zeros(obj.nbasis);
             kmat(triu(true(obj.nbasis))) = kuniqvec;
@@ -74,7 +72,7 @@ classdef InCoreJK < handle
             
         end
         
-        function jrow = JRow(obj, ind)
+        function jrow = Jrow(obj, ind)
             if(ind == obj.bigN)
                 append = [];
             else
@@ -84,7 +82,7 @@ classdef InCoreJK < handle
             jrow = [ (obj.teiVecJ( (ind-1)*ind/2+1 : ind*(ind+1)/2 ))', append'];
         end
         
-        function krow = KRow(obj, ind)
+        function krow = Krow(obj, ind)
             if(ind == obj.bigN)
                 append = [];
             else
