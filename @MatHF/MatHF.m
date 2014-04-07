@@ -55,6 +55,9 @@ classdef MatHF < handle
             res.Ehf = [];
             res.Eorb = [];
             res.orb = [];
+            
+            obj.UseFastJK();
+            
         end
         
         % incorejk object initializer 
@@ -66,9 +69,7 @@ classdef MatHF < handle
             obj.fastjk = FastJK(obj.matpsi);
         end
         
-        function doHF(obj)
-            
-            obj.UseFastJK();
+        function Ehf_ = doHF(obj)
             
             filled = 1:(obj.nelec/2);
             % Step 3 -- Calculate transformation matrix (eq. 3.167).
@@ -127,7 +128,8 @@ classdef MatHF < handle
             obj.density = Pn;
             
             % Step 12: Output.
-            obj.Ehf = Ehfsave/2 + obj.Enuc;
+            Ehf_ = Ehfsave/2 + obj.Enuc;
+            obj.Ehf = Ehf_;
             
             % Orbital energies.
             obj.Eorb = e;
