@@ -19,30 +19,30 @@ classdef FastJK < handle
     
     methods
         
-        function res = FastJK(matpsi)
+        function obj = FastJK(matpsi)
             
             [teiVecJ, teiVecK] = matpsi.tei_alluniqJK();
-            res.nbasis = matpsi.nbasis();
-            res.bigN = res.nbasis * ( res.nbasis + 1 ) / 2;
-            res.uniqN = ( res.nbasis * ...
-                        ( res.nbasis + 1 ) * ...
-                        ( res.nbasis * res.nbasis + res.nbasis + 2 ) )...
+            obj.nbasis = matpsi.nbasis();
+            obj.bigN = obj.nbasis * ( obj.nbasis + 1 ) / 2;
+            obj.uniqN = ( obj.nbasis * ...
+                        ( obj.nbasis + 1 ) * ...
+                        ( obj.nbasis * obj.nbasis + obj.nbasis + 2 ) )...
                         / 8;
                     
-            res.teiMatJ = zeros(res.bigN);
-            res.teiMatJ(triu(true(res.bigN))) = teiVecJ;
+            obj.teiMatJ = zeros(obj.bigN);
+            obj.teiMatJ(triu(true(obj.bigN))) = teiVecJ;
             teiVecJ = []; % frees memory 
-            res.teiMatK = zeros(res.bigN);
-            res.teiMatK(triu(true(res.bigN))) = teiVecK;
+            obj.teiMatK = zeros(obj.bigN);
+            obj.teiMatK(triu(true(obj.bigN))) = teiVecK;
             teiVecK = []; % frees memory 
             % Hermitianize J and K 
-            for i = 1:res.bigN
-                res.teiMatJ(i+1:res.bigN, i) = res.teiMatJ(i, i+1:res.bigN);
-                res.teiMatK(i+1:res.bigN, i) = res.teiMatK(i, i+1:res.bigN);
+            for i = 1:obj.bigN
+                obj.teiMatJ(i+1:obj.bigN, i) = obj.teiMatJ(i, i+1:obj.bigN);
+                obj.teiMatK(i+1:obj.bigN, i) = obj.teiMatK(i, i+1:obj.bigN);
             end
 
-            res.arr = 1 : res.bigN;
-            res.arr = res.arr .* ( res.arr - 1 ) ./ 2 + 1;
+            obj.arr = 1 : obj.bigN;
+            obj.arr = obj.arr .* ( obj.arr - 1 ) ./ 2 + 1;
 
         end
         

@@ -34,27 +34,27 @@ classdef MatHF < handle
     methods
         
         % constructor
-        function res = MatHF(geomstr, basisname)
-            res.matpsi = MatPsi({geomstr, basisname});
+        function obj = MatHF(geomstr, basisname)
+            obj.matpsi = MatPsi({geomstr, basisname});
             
-            res.Enuc = res.matpsi.Enuc();
-            res.natom = res.matpsi.natom();
-            res.nelec = res.matpsi.nelec();
+            obj.Enuc = obj.matpsi.Enuc();
+            obj.natom = obj.matpsi.natom();
+            obj.nelec = obj.matpsi.nelec();
             
-            res.nbasis = res.matpsi.nbasis();
-            res.basisAtom = res.matpsi.func2center();
+            obj.nbasis = obj.matpsi.nbasis();
+            obj.basisAtom = obj.matpsi.func2center();
             
-            res.S = res.matpsi.overlap();
-            res.H1 = res.matpsi.kinetic() + res.matpsi.potential();
+            obj.S = obj.matpsi.overlap();
+            obj.H1 = obj.matpsi.kinetic() + obj.matpsi.potential();
             
-            res.eps = 1.0e-8;
-            res.maxIter = 100;
-            res.minIter = 5;
+            obj.eps = 1.0e-8;
+            obj.maxIter = 100;
+            obj.minIter = 5;
             
-            res.density = [];
-            res.Ehf = [];
-            res.Eorb = [];
-            res.orb = [];
+            obj.density = [];
+            obj.Ehf = [];
+            obj.Eorb = [];
+            obj.orb = [];
             
             obj.UseFastJK();
             

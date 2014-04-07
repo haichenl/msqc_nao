@@ -18,16 +18,16 @@ classdef InCoreJK < handle
     
     methods
         
-        function res = InCoreJK(matpsi)
-            [res.teiVecJ, res.teiVecK] = matpsi.tei_alluniqJK();
-            res.nbasis = matpsi.nbasis();
-            res.bigN = res.nbasis * ( res.nbasis + 1 ) / 2;
-            res.uniqN = ( res.nbasis * ...
-                        ( res.nbasis + 1 ) * ...
-                        ( res.nbasis * res.nbasis + res.nbasis + 2 ) )...
+        function obj = InCoreJK(matpsi)
+            [obj.teiVecJ, obj.teiVecK] = matpsi.tei_alluniqJK();
+            obj.nbasis = matpsi.nbasis();
+            obj.bigN = obj.nbasis * ( obj.nbasis + 1 ) / 2;
+            obj.uniqN = ( obj.nbasis * ...
+                        ( obj.nbasis + 1 ) * ...
+                        ( obj.nbasis * obj.nbasis + obj.nbasis + 2 ) )...
                         / 8;
-            res.arr = 1 : res.bigN;
-            res.arr = res.arr .* ( res.arr - 1 ) ./ 2 + 1;
+            obj.arr = 1 : obj.bigN;
+            obj.arr = obj.arr .* ( obj.arr - 1 ) ./ 2 + 1;
 
         end
         
