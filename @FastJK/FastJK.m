@@ -46,7 +46,7 @@ classdef FastJK < handle
 
         end
         
-        function jmat = ComputeJ(obj, densMat)
+        function jmat = Jmat(obj, densMat)
             % in-core algorithm
             
             % scale density vector 
