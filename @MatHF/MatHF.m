@@ -32,6 +32,11 @@ classdef MatHF < handle
             res.HFpars.eps = 1.0e-8;
             res.HFpars.maxIter = 100;
             res.HFpars.minIter = 5;
+            
+            res.HFresults.density = [];
+            res.HFresults.Ehf = [];
+            res.HFresults.Eorb = [];
+            res.HFresults.orb = [];
         end
         
         % incorejk object initializer 
@@ -40,8 +45,8 @@ classdef MatHF < handle
         end
         
         function doHF(obj)
-            filled = 1:(obj.Molprop.Nelec/2);
-            
+            filled = 1:(obj.MolProp.nelec/2);
+            H1 = obj.OEI.H1;
             % Step 3 -- Calculate transformation matrix (eq. 3.167).
             X = inv(sqrtm(obj.OEI.S));
             

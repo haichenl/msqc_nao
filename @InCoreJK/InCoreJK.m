@@ -5,7 +5,8 @@ classdef InCoreJK < handle
         % 2*uniqN length vector, the first uniqN length holding a "normal"
         % two-electron integral unique vector, the last uniqN length
         % holding an arranged one for the forming of K 
-        teiVecJK; % occupy ~ n^4 / 4 * 8 bytes of memory. nbasis = 375 => 40 gb
+        teiVecJ; % occupy ~ n^4 / 4 * 8 bytes of memory. nbasis = 375 => 40 gb
+        teiVecK; % occupy ~ n^4 / 4 * 8 bytes of memory. nbasis = 375 => 40 gb
         
         % frequently used numbers 
         nbasis; % number of basis functions 
@@ -20,7 +21,7 @@ classdef InCoreJK < handle
     methods
         
         function res = InCoreJK(matpsi)
-            res.teiVecJK = matpsi.tei_alluniqJK();
+            [res.teiVecJ, res.teiVecK] = matpsi.tei_alluniqJK();
             res.nbasis = matpsi.nbasis();
             res.bigN = res.nbasis * ( res.nbasis + 1 ) / 2;
             res.uniqN = ( res.nbasis * ...
@@ -29,6 +30,7 @@ classdef InCoreJK < handle
                         / 8;
             res.arr = 1 : res.bigN;
             res.arr = res.arr .* ( res.arr - 1 ) ./ 2 + 1;
+
         end
         
         function jmat = ComputeJ(obj, densMat)
@@ -76,20 +78,20 @@ classdef InCoreJK < handle
             if(ind == obj.bigN)
                 append = [];
             else
-                tmp = obj.teiVecJK( obj.arr + ind - 1);
+                tmp = obj.teiVecJ( obj.arr + ind - 1);
                 append = tmp(end-(obj.bigN-ind)+1 : end);
             end
-            jrow = [ obj.teiVecJK( (ind-1)*ind/2+1 : ind*(ind+1)/2 ), append];
+            jrow = [ (obj.teiVecJ( (ind-1)*ind/2+1 : ind*(ind+1)/2 ))', append'];
         end
         
         function krow = KRow(obj, ind)
             if(ind == obj.bigN)
                 append = [];
             else
-                tmp = obj.teiVecJK(obj.arr + ind + obj.uniqN - 1);
+                tmp = obj.teiVecK(obj.arr + ind - 1);
                 append = tmp( end-(obj.bigN-ind)+1 : end );
             end
-            krow = [ obj.teiVecJK( (ind-1)*ind/2+1+obj.uniqN : ind*(ind+1)/2+obj.uniqN ), append];
+            krow = [ (obj.teiVecK( (ind-1)*ind/2+1 : ind*(ind+1)/2 ))', append'];
         end
         
     end
