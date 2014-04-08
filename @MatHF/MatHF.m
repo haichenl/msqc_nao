@@ -112,7 +112,7 @@ classdef MatHF < handle
                 DeltaE = abs(Ehftemp - Ehfsave);
                 if (iter > obj.maxIter)
                     finished = true;
-                elseif (rmsDeltaDens < obj.eps || DeltaE < obj.eps)
+                elseif (rmsDeltaDens < obj.eps && DeltaE < obj.eps)
                     finished = true;
                 end
                 Ehfsave = Ehftemp;
