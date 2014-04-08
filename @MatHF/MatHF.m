@@ -107,7 +107,7 @@ classdef MatHF < handle
                 iter = iter + 1;
                 
                 DeltaDens = reshape(P - Pn, 1, obj.nbasis * obj.nbasis);
-                rmsDeltaDens = DeltaDens * DentaDens';
+                rmsDeltaDens = DeltaDens * DeltaDens';
                 Ehftemp = sum(sum(Pn.*(obj.H1+F)));
                 DeltaE = abs(Ehftemp - Ehfsave);
                 if (iter > obj.maxIter)
