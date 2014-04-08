@@ -1,8 +1,8 @@
 classdef MatHF < handle
     
     properties
+        zmat;
         matpsi;
-        incorejk;
         fastjk;
         
         % Molecule properties 
@@ -34,8 +34,9 @@ classdef MatHF < handle
     methods
         
         % constructor
-        function obj = MatHF(geomstr, basisname)
-            obj.matpsi = MatPsi({geomstr, basisname});
+        function obj = MatHF(zmat_, basisname)
+            obj.zmat = zmat_;
+            obj.matpsi = MatPsi({obj.zmat.build_molstr, basisname});
             
             obj.Enuc = obj.matpsi.Enuc();
             obj.natom = obj.matpsi.natom();
@@ -60,11 +61,7 @@ classdef MatHF < handle
             
         end
         
-        % incorejk object initializer 
-        function UseInCoreJK(obj)
-            obj.incorejk = InCoreJK(obj.matpsi);
-        end
-        
+        % fastjk object initializer 
         function UseFastJK(obj)
             obj.fastjk = FastJK(obj.matpsi);
         end
@@ -91,8 +88,8 @@ classdef MatHF < handle
                 
                 P = Pn;
                 
-                % Step 6 -- Obtain F (fock matrix). In-core right now
-                F = obj.H1 + obj.fastjk.Jmat(P) + obj.fastjk.Kmat(P);
+                % Step 6 -- Obtain F (fock matrix); Fast algorithm 
+                F = obj.H1 + 2 .* obj.fastjk.Jmat(P) - obj.fastjk.Kmat(P);
                 
                 % Step 7 -- Calculate the transformed F matrix.
                 Ft = X'*F*X;
@@ -108,7 +105,7 @@ classdef MatHF < handle
                 
                 % Step 10 -- Calculate the new density matrix.
                 
-                Pn = 2* C(:,filled)*( C(:,filled)');
+                Pn = C(:,filled)*( C(:,filled)');
                 iter = iter + 1;
                 
                 changeInDensity = max(max(abs(P - Pn)));
@@ -128,7 +125,7 @@ classdef MatHF < handle
             obj.density = Pn;
             
             % Step 12: Output.
-            Ehf_ = Ehfsave/2 + obj.Enuc;
+            Ehf_ = Ehfsave + obj.Enuc;
             obj.Ehf = Ehf_;
             
             % Orbital energies.

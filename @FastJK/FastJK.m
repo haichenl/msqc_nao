@@ -68,7 +68,7 @@ classdef FastJK < handle
         function kmat = Kmat(obj, densMat)
             % in-core algorithm
             
-            densVec = -0.5 * densMat(triu(true(obj.nbasis)));
+            densVec = densMat(triu(true(obj.nbasis)));
             diagind = 1 : obj.nbasis;
             diagind = diagind .* ( diagind + 1 ) / 2;
             densVec(diagind) = 0.5 * densVec(diagind);

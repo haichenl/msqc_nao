@@ -1,0 +1,10 @@
+zmat1 = ZMatrix();
+zmat1.file_name_base = 'met';
+zmat1.make_atom(6,0,0,0);
+zmat1.make_atom(1,1,0,0);
+zmat1.make_atom(1,1,2,0);
+zmat1.make_atom(1,1,2,3);
+zmat1.make_atom(1,1,2,3);
+zmat1.pars.bond_pars = [1.09 1.09 1.09 1.09];
+zmat1.pars.ang_pars = [109.4712 109.4712 109.4712];
+zmat1.pars.di_pars = [120.0 -120];
