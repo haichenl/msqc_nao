@@ -21,7 +21,6 @@ classdef MatHF < handle
         % Hartree-Fock settings 
         eps;
         maxIter;
-        minIter;
         
         % Hartree-Fock results
         density;
@@ -36,7 +35,7 @@ classdef MatHF < handle
         % constructor
         function obj = MatHF(zmat_, basisname)
             obj.zmat = zmat_;
-            obj.matpsi = MatPsi({obj.zmat.build_molstr, basisname});
+            obj.matpsi = MatPsi({obj.zmat.build_molstr(), basisname});
             
             obj.Enuc = obj.matpsi.Enuc();
             obj.natom = obj.matpsi.natom();
@@ -50,7 +49,6 @@ classdef MatHF < handle
             
             obj.eps = 1.0e-8;
             obj.maxIter = 100;
-            obj.minIter = 5;
             
             obj.density = [];
             obj.Ehf = [];
@@ -108,16 +106,14 @@ classdef MatHF < handle
                 Pn = C(:,filled)*( C(:,filled)');
                 iter = iter + 1;
                 
-                changeInDensity = max(max(abs(P - Pn)));
+                DeltaDens = reshape(P - Pn, 1, obj.nbasis * obj.nbasis);
+                rmsDeltaDens = DeltaDens * DentaDens';
                 Ehftemp = sum(sum(Pn.*(obj.H1+F)));
-                changeInEnergy = abs(Ehftemp - Ehfsave);
+                DeltaE = abs(Ehftemp - Ehfsave);
                 if (iter > obj.maxIter)
                     finished = true;
-                elseif (iter > obj.minIter)
-                    if (changeInDensity < obj.eps...
-                            || changeInEnergy < obj.eps)
-                        finished = true;
-                    end
+                elseif (rmsDeltaDens < obj.eps || DeltaE < obj.eps)
+                    finished = true;
                 end
                 Ehfsave = Ehftemp;
             end
