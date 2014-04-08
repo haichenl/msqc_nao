@@ -9,6 +9,7 @@
 % zmat.pars.ang_pars = [109.4712 109.4712 109.4712];
 % zmat.pars.di_pars = [120.0 -120];
 
+zmat = ZMatrix();
 zmat.file_name_base = 'ethane';
 zmat.make_atom(6,0,0,0); 
 zmat.make_atom(6,1,0,0); 
